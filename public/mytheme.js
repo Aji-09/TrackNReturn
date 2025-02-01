@@ -1,13 +1,9 @@
-import './assets/main.css'
+import { createApp } from "vue";
+import PrimeVue from "primevue/config";
+import Aura from "@primevue/themes/aura";
+import { definePreset } from "@primevue/themes";
 
-import { createApp } from 'vue'
-import App from './App.vue'
-import PrimeVue from 'primevue/config';
-import { definePreset } from '@primevue/themes';
-import Aura from '@primevue/themes/aura';
-
-
-const app = createApp(App)
+const app = createApp(App);
 
 const MyPreset = definePreset(Aura, {
     primitive: {
@@ -664,22 +660,12 @@ const MyPreset = definePreset(Aura, {
                 }
             }
         }
-    },
-    components: {
-        button: {
-            paddingX: "0.50rem",
-            paddingY: "0.50rem"
-        }
     }
 });
 
 app.use(PrimeVue, {
     theme: {
-        preset: MyPreset,
-        options: {
-            darkModeSelector: ".my-app-dark"
-        }
-    }
+        preset: MyPreset
+    },
 });
-
-app.mount('#app')
+app.mount("#app");
