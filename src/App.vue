@@ -1,6 +1,8 @@
 <script setup>
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
+import ToggleSwitch from 'primevue/toggleswitch';
+
 import { ref } from 'vue';
 
 const text = ref('');
@@ -12,12 +14,11 @@ function toggleDarkMode() {
 </script>
 
 <template>
-  <div>
+  <div class="block">
     <InputText v-model="text" style="margin-right: 1rem;"/>
     <Button label="Submit"/>
-     
     {{ text }}
-    <Button label="Toggle Dark Mode" @click="toggleDarkMode()"></Button>
-    <p>haha</p>
+
+    <div ><ToggleSwitch @click="toggleDarkMode()"></ToggleSwitch></div>
   </div>
 </template>                
