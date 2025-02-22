@@ -10,19 +10,21 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@nuxt/ui": "^2.21.0",
     "@nuxtjs/cloudinary": "^4.0.0",
-    "@tailwindcss/vite": "^4.0.8",
     "firebase": "^11.3.1",
     "firebase-admin": "^13.1.0",
     "nuxt": "^3.15.4",
     "nuxt-vuefire": "^1.0.5",
     "pinia": "^3.0.1",
-    "tailwindcss": "^4.0.8",
     "typescript": "^5.7.3",
     "vue": "latest",
     "vue-router": "latest",
     "vuefire": "^3.2.1",
     "yup": "^1.6.1"
+  },
+  "devDependencies": {
+    "@nuxt/ui": "^3.0.0-alpha.12",
+    "@tailwindcss/vite": "^4.0.8",
+    "tailwindcss": "^4.0.7"
   }
 }
