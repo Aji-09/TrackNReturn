@@ -2,14 +2,14 @@ import tailwindcss from "@tailwindcss/vite";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  ssr: true,
+  ssr: false,
   compatibilityDate: "2024-11-01",
   devtools: { enabled: false },
-  
+
   vite: {
     plugins: [tailwindcss()],
   },
-  modules: ['@nuxt/ui','nuxt-vuefire','@nuxtjs/cloudinary' ],
+  modules: ["@nuxt/ui", "nuxt-vuefire", "@nuxtjs/cloudinary"],
   css: ["~/assets/css/main.css"],
   ui: {
     theme: {
@@ -24,10 +24,10 @@ export default defineNuxtConfig({
       ],
     },
   },
-  
+
   vuefire: {
     auth: {
-      enabled: true
+      enabled: true,
     },
     config: {
       apiKey: "AIzaSyBXh-IZ7LIWWmQVjcH20jbv2O7ex-s978w",
@@ -42,9 +42,8 @@ export default defineNuxtConfig({
   typescript: {
     tsConfig: {
       compilerOptions: {
-        types: ['~/types/middleware'],
+        types: ["~/types/middleware"],
       },
     },
   },
-  
 });
