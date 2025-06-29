@@ -20,7 +20,7 @@
     "yup": "^1.6.1"
   },
   "devDependencies": {
-    "@nuxt/ui": "^3.0.0-alpha.13",
+    "@nuxt/ui": "^3.2.0",
     "@tailwindcss/vite": "^4.0.8",
     "firebase-admin": "^13.0.2",
     "nuxt-vuefire": "^1.0.5-beta.1",
