@@ -1,67 +1,66 @@
 <template>
   <div>
-    <!-- Show loading state -->
+    <!-- Loading -->
     <div v-if="loading" class="text-center mt-8">
       <p class="text-lg text-gray-600 dark:text-zinc-300">Loading lost items...</p>
     </div>
 
-    <!-- Show if there are no lost items -->
+    <!-- No Items -->
     <div v-else-if="lostItems.length === 0" class="text-center mt-8">
       <p class="text-lg text-gray-600 dark:text-zinc-300">No lost items reported yet.</p>
     </div>
 
+    <!-- Items Grid -->
     <div v-else>
-      <!-- Render lost items -->
       <h1 class="text-3xl font-bold text-center text-zinc-900 dark:text-white mb-6">Lost Items</h1>
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6 mt-8">
-        <div 
-          v-for="item in lostItems" 
-          :key="item.id" 
-          class="w-full p-4 border border-gray-300 dark:border-zinc-600 rounded-lg shadow-md transform hover:scale-105 transition duration-300 ease-in-out"
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <div
+          v-for="item in lostItems"
+          :key="item.id"
+          class="flex flex-col justify-between h-full bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 rounded-lg shadow-md p-4"
         >
-          <div class="relative">
-            <!-- Display Cloudinary Image -->
-            <div v-if="item.imageUrl" class="mb-4 overflow-hidden rounded-lg">
-              <img 
-                :src="item.imageUrl" 
-                alt="Item Image" 
-                class="w-full h-40 object-cover rounded-md shadow-md" 
-              />
-            </div>
+          <!-- Image -->
+          <div class="mb-4 aspect-[4/3] bg-zinc-200 dark:bg-zinc-700 rounded-md overflow-hidden">
+            <img
+              :src="getImageOrPlaceholder(item.imageUrl)"
+              alt="Item Image"
+              class="w-full h-full object-cover"
+            />
+          </div>
 
-            <h3 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white mb-4">
+          <!-- Info -->
+          <div class="flex-1">
+            <h3 class="text-xl font-semibold text-zinc-900 dark:text-white mb-2 truncate">
               {{ item.name }}
             </h3>
-            <p class="text-sm sm:text-md text-zinc-800 dark:text-zinc-200 mb-3">
-              Reported by: <span class="font-semibold text-zinc-900 dark:text-zinc-100">{{ item.reportedBy }}</span>
+            <p class="text-sm text-zinc-700 dark:text-zinc-300 mb-1 truncate">
+              <strong>By:</strong> {{ item.reportedBy }}
             </p>
-            <p class="text-sm sm:text-md text-zinc-800 dark:text-zinc-200 mb-3">
-              Location: <span class="font-semibold text-zinc-900 dark:text-zinc-100">{{ item.location }}</span>
+            <p class="text-sm text-zinc-700 dark:text-zinc-300 mb-1 truncate">
+              <strong>Location:</strong> {{ item.location }}
             </p>
-            <p class="text-sm sm:text-md text-zinc-800 dark:text-zinc-200 mb-4">
-              <strong class="text-zinc-900 dark:text-zinc-100">Description:</strong> {{ item.description }}
+            <p class="text-sm text-zinc-700 dark:text-zinc-300 mb-2">
+              <strong>Description:</strong> {{ item.description }}
             </p>
-            <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-4">
               Reported on: {{ formatDate(item.createdAt) }}
             </p>
+          </div>
 
-            <div class="flex justify-between items-center mt-4">
-              <!-- Request Claim Button -->
-              <button 
-                @click="redirectToClaim(item)" 
-                class="bg-red-500 text-white px-4 py-2 rounded-lg text-xs sm:text-sm hover:bg-red-600 focus:outline-none"
-              >
-                Request Claim
-              </button>
-              
-              <!-- Found It Button -->
-              <button 
-                @click="redirectToFoundForm(item)" 
-                class="bg-blue-500 text-white px-4 py-2 rounded-lg text-xs sm:text-sm hover:bg-blue-600 focus:outline-none"
-              >
-                Found It
-              </button>
-            </div>
+          <!-- Actions -->
+          <div class="flex justify-between mt-auto pt-2">
+            <button
+              @click="redirectToClaim(item)"
+              class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600"
+            >
+              Request Claim
+            </button>
+            <button
+              @click="redirectToFoundForm(item)"
+              class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600"
+            >
+              Found It
+            </button>
           </div>
         </div>
       </div>
@@ -69,10 +68,22 @@
   </div>
 </template>
 
+
 <script setup lang="ts">
-import { useRouter } from 'vue-router';
-import { ref, onMounted } from 'vue';
-import { getFirestore, collection, query, onSnapshot, getDoc, doc, Timestamp } from 'firebase/firestore';
+import { useRouter } from "vue-router";
+import { ref, onMounted } from "vue";
+import {
+  getFirestore,
+  collection,
+  query,
+  onSnapshot,
+  getDoc,
+  doc,
+  Timestamp,
+} from "firebase/firestore";
+import { usePlaceholderImage } from "@/composables/usePlaceholderImage";
+
+const { getImageOrPlaceholder } = usePlaceholderImage();
 
 interface LostItem {
   id: string;
@@ -112,7 +123,9 @@ onMounted(async () => {
       const items: LostItem[] = [];
       for (const docSnap of snapshot.docs) {
         const data = docSnap.data();
-        const reportedBy = data.userId ? await getUserDetails(data.userId) : "Anonymous";
+        const reportedBy = data.userId
+          ? await getUserDetails(data.userId)
+          : "Anonymous";
         items.push({
           id: docSnap.id,
           name: data.name,
@@ -134,11 +147,11 @@ onMounted(async () => {
 
 const formatDate = (timestamp: Timestamp) => {
   const date = timestamp.toDate();
-  return date.toLocaleDateString('en-US', {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+  return date.toLocaleDateString("en-US", {
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
 };
 
@@ -149,9 +162,9 @@ const redirectToClaim = (item: LostItem) => {
       name: item.name,
       location: item.location,
       description: item.description,
-      imageUrl: item.imageUrl || '',
-      reportedBy: item.reportedBy
-    }
+      imageUrl: item.imageUrl || "",
+      reportedBy: item.reportedBy,
+    },
   });
 };
 
@@ -162,13 +175,13 @@ const redirectToFoundForm = (item: LostItem) => {
       name: item.name,
       location: item.location,
       description: item.description,
-      imageUrl: item.imageUrl || '',
-      reportedBy: item.reportedBy
-    }
+      imageUrl: item.imageUrl || "",
+      reportedBy: item.reportedBy,
+    },
   });
 };
 
 definePageMeta({
-  layout: 'user',
+  layout: "user",
 });
 </script>
