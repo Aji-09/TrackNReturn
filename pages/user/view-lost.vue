@@ -1,124 +1,101 @@
 <template>
-  <div
-    class="flex items-center p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700"
-    role="alert"
-  >
-    <svg
-      class="w-6 h-6 mr-2"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        d="M10.29 3.86l-6.6 11.45A2 2 0 005.21 18h13.58a2 2 0 001.72-2.69l-6.6-11.45a2 2 0 00-3.42 0zM12 9v4m0 4h.01"
-      ></path>
-    </svg>
-    <p>System is updating. It will be available soon.</p>
-  </div>
-  <div
-    class="flex justify-center items-center h-screen flex-col relative overflow-hidden"
-  >
-    <div v-if="!gameStarted" class="text-center">
-      <h2 class="text-2xl font-bold">Click the Button Challenge!</h2>
-      <p class="mt-2">Click as many times as you can in 10 seconds!</p>
-      <button
-        @click="startGame"
-        class="bg-blue-500 text-white px-6 py-2 mt-4 rounded-lg"
-      >
-        Start Game
-      </button>
+  <div class="min-h-screen p-6 bg-zinc-100 dark:bg-zinc-900">
+    <h1 class="text-3xl font-bold text-center text-zinc-900 dark:text-white mb-6">
+      Your Lost Items
+    </h1>
+
+    <div v-if="loading" class="text-center text-zinc-500 dark:text-zinc-400">
+      Loading your lost items...
     </div>
 
-    <div v-else class="text-center">
-      <h2 class="text-xl font-bold">Time Left: {{ timeLeft }}s</h2>
-      <button
-        @click="incrementScore"
-        class="bg-red-500 text-white px-6 py-2 mt-4 rounded-lg text-3xl"
-      >
-        Click Me!
-      </button>
-      <p class="mt-2 text-lg font-bold">Score: {{ score }}</p>
+    <div v-else-if="lostItems.length === 0" class="text-center text-zinc-500 dark:text-zinc-400">
+      You have not reported any lost items yet.
     </div>
 
-    <div v-if="gameOver" class="text-center mt-4">
-      <h2 class="text-xl font-bold">Game Over!</h2>
-      <p class="mt-2">Final Score: {{ score }}</p>
-      <button
-        @click="resetGame"
-        class="bg-green-500 text-white px-6 py-2 mt-4 rounded-lg"
+    <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <div
+        v-for="item in lostItems"
+        :key="item.id"
+        class="bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 rounded-lg shadow-md p-4"
       >
-        Play Again
-      </button>
+        <div class="mb-4">
+          <img
+            :src="getImageOrPlaceholder(item.imageUrl)"
+            alt="Lost item"
+            class="w-full h-40 object-cover rounded-md"
+          />
+        </div>
+        <h3 class="text-xl font-semibold text-zinc-900 dark:text-white mb-2">
+          {{ item.name || 'Unnamed Item' }}
+        </h3>
+        <p class="text-sm text-zinc-700 dark:text-zinc-300">
+          <strong>Description:</strong> {{ item.description || 'No description' }}
+        </p>
+        <p class="text-sm text-zinc-700 dark:text-zinc-300">
+          <strong>Location:</strong> {{ item.location || 'Unknown' }}
+        </p>
+        <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1">
+          {{ formatDate(item.createdAt) }}
+        </p>
+      </div>
     </div>
-
-    <div
-      v-for="(particle, index) in particles"
-      :key="index"
-      class="absolute w-6 h-6 bg-yellow-500 rounded-full"
-      :style="{ top: particle.y + 'px', left: particle.x + 'px' }"
-    ></div>
   </div>
 </template>
 
-<script setup>
-import { ref } from "vue";
+<script setup lang="ts">
+import { ref, watch } from 'vue'
+import { useFirestore, useCurrentUser } from 'vuefire'
+import { collection, query, where, orderBy, getDocs } from 'firebase/firestore'
+import { usePlaceholderImage } from '@/composables/usePlaceholderImage'
 
-const score = ref(0);
-const timeLeft = ref(10);
-const gameStarted = ref(false);
-const gameOver = ref(false);
-const particles = ref([]);
-let timer = null;
+const db = useFirestore()
+const user = useCurrentUser()
+const lostItems = ref<any[]>([])
+const loading = ref(true)
+const { getImageOrPlaceholder } = usePlaceholderImage()
 
-const startGame = () => {
-  gameStarted.value = true;
-  gameOver.value = false;
-  score.value = 0;
-  timeLeft.value = 10;
-  particles.value = [];
-  timer = setInterval(() => {
-    if (timeLeft.value > 0) {
-      timeLeft.value--;
-    } else {
-      endGame();
-    }
-  }, 1000);
-};
-definePageMeta({ layout: "user" });
-const incrementScore = (event) => {
-  if (gameStarted.value && timeLeft.value > 0) {
-    score.value++;
-    addParticle(event);
+const fetchUserLostItems = async (uid: string) => {
+  loading.value = true
+  try {
+    const q = query(
+      collection(db, 'lost_items'),
+      where('userId', '==', uid),
+      orderBy('createdAt', 'desc')
+    )
+    const snapshot = await getDocs(q)
+    lostItems.value = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }))
+  } catch (error) {
+    console.error('Error fetching user lost items:', error)
+  } finally {
+    loading.value = false
   }
-};
+}
 
-const addParticle = (event) => {
-  const x = Math.random() * window.innerWidth;
-  const y = Math.random() * window.innerHeight;
-  particles.value.push({ x, y });
-};
+// ✅ Fetch immediately if already available
+if (user.value?.uid) {
+  fetchUserLostItems(user.value.uid)
+}
 
-const endGame = () => {
-  gameStarted.value = false;
-  gameOver.value = true;
-  clearInterval(timer);
-};
+// ✅ Watch in case it's loaded later
+watch(user, (u) => {
+  if (u?.uid) fetchUserLostItems(u.uid)
+})
 
-const resetGame = () => {
-  gameOver.value = false;
-  startGame();
-};
+const formatDate = (timestamp: any) => {
+  if (!timestamp) return 'Unknown'
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+}
+
+definePageMeta({
+  layout: 'user',
+})
 </script>
-
-<style scoped>
-button {
-  transition: transform 0.1s ease;
-}
-button:active {
-  transform: scale(0.95);
-}
-</style>
+c
